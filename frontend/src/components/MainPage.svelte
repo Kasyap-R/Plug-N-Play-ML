@@ -34,10 +34,23 @@
         }
         isTraining = true;
 
-        const requestBody = {
-            data: uploadedData,
-            model: selectedModel
-        };
+        const formData = new FormData();
+        uploadedData.forEach(dataItem => {
+            formData.append('file', dataItem.file);  
+        });
+        
+        formData.append('model', selectedModel)
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/train_model/', {
+                method: 'POST',
+                body: formData
+            })
+            const confirmationMessage = await response.json();
+            console.log(confirmationMessage)
+        } catch (e) {
+            console.error("Error when sending files:", error);
+        }
     }
 
 

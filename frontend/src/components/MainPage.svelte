@@ -42,7 +42,7 @@
         formData.append('model', selectedModel)
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/train_model/', {
+            const response = await fetch('http://127.0.0.1:8000/api/v1/train_model/tabular/', {
                 method: 'POST',
                 body: formData
             })

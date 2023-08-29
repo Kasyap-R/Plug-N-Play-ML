@@ -53,8 +53,10 @@
     <ul class="file-list">
         {#each files as fileObj (fileObj.id)}
             <li class="file-item">
-                <button class="remove-file" on:click={() => removeFile(fileObj.id)}>x</button>
-                {fileObj.file.name}
+                <div class="file-container">
+                    <button class="remove-file" on:click={() => removeFile(fileObj.id)}>x</button>
+                    <span class="file-name">{fileObj.file.name}</span>
+                </div>
             </li>
         {/each}
     </ul>
@@ -81,19 +83,43 @@
         border-radius: 5px;
     }
 
+    .file-container {
+        display: flex;
+        align-items: center;
+        width: 100%; /* set width to fill parent */
+        position: relative; /* set relative positioning so that we can position 'remove-file' absolutely */
+    }
+
+    .file-list {
+        display: flex;
+        flex-direction: column;
+    }
+
     .file-input {
         display: none;
     }
     
     .file-item {
-        list-style-type: none
+        list-style-type: none;
+    }
+
+    .file-name {
+        margin-left: 40px; /* leave space for 'remove-file' button */
+        text-align: left;
     }
 
     .remove-file {
+        position: absolute; /* set absolute positioning */
+        left: 0; /* align to the left edge of 'file-container' */
         color: red;
         background-color: white;
-        border: 2px gray; 
+        border: 2px solid gray;
         border-radius: 1rem;
+        cursor: pointer;
+    }
+
+    .remove-file:hover {
+        background-color: gray;
     }
 
     .drag-over {

@@ -1,30 +1,66 @@
 <script>
     import { createEventDispatcher } from 'svelte';
+    import { ERROR_MESSAGES } from '../utils/error_messages'
+    export let allowedFileExtensions;
+
     const dispatch = createEventDispatcher();
 
     let files = []
     let isDragging = false;
 
-    function handleDragOver(event) {
-        event.preventDefault();
-    }
-
-    function handleDrop(event) {
+    function handleFileDrop(event) {
         event.preventDefault();
         isDragging = false;
-        const newFiles = [...event.dataTransfer.files].map(file => ({file, id: Date.now() + Math.random()}))
+        if (isFileUploaded()) {
+            return;
+        }
+        const newFiles = retrieveValidFiles([...event.dataTransfer.files])
         files = [...files, ...newFiles];
         dispatch('filesUploaded', files);
     }
 
-    function handleFileChange(event) {
-        const newFiles = [...event.target.files].map(file => ({ file, id: Date.now() + Math.random()}));
+    function handleFileUpload(event) {
+        if (isFileUploaded()) {
+            return;
+        }
+        const newFiles = retrieveValidFiles([...event.target.files])
         files = [...files, ...newFiles];
         dispatch('filesUploaded', files);
+    }
+
+    function retrieveValidFiles(files) {
+        let unsupportedTypes = [];
+        const supportedFiles = files.filter(file => {
+                const isValid = validateFile(file)
+                if(!isValid) {
+                    unsupportedTypes.push(file.type || 'unknown');
+                }
+                return isValid
+            })
+            .map(file => ({file, id: Date.now() + Math.random()}))
+        // Alert the user if there were unsupported files
+        if (unsupportedTypes.length > 0) {
+            alert(`Error: Attempting to upload unsupported file types of type [${unsupportedTypes.join(', ')}]`);
+        }
+
+        return supportedFiles;
+    }
+
+    function isFileUploaded() {
+        const exceedsFileLimit = (files.length >= 1);
+        if (exceedsFileLimit) {
+            alert(ERROR_MESSAGES.TOO_MANY_FILES)
+        }
+        return exceedsFileLimit;
     }
 
     function removeFile(id) {
         files = files.filter(file => file.id !== id);
+        dispatch('filesRemoved', files);
+    }
+
+    function validateFile(file) {
+        return allowedFileExtensions.exec(file.name) !== null;
     }
 
     function handleDragEnter() {
@@ -35,6 +71,10 @@
         isDragging = false;
     }
 
+    function handleDragOver(event) {
+        event.preventDefault();
+    }
+
 </script>
 
 
@@ -42,18 +82,18 @@
     <div
         class="upload-area"
         on:dragover={handleDragOver}
-        on:drop={handleDrop}
+        on:drop={handleFileDrop}
         on:dragleave={handleDragLeave}
         on:dragenter={handleDragEnter}
         class:drag-over={isDragging}
     >
         Drag & Drop your files here or
-        <label class="file-label">Browse<input type="file" bind:files on:change={handleFileChange} class="file-input"></label>
+        <label class="file-label">Browse<input type="file" on:change={handleFileUpload} class="file-input"></label>
     </div>
     <ul class="file-list">
         {#each files as fileObj (fileObj.id)}
             <li class="file-item">
-                <button class="remove-file" on:click={() => removeFile(fileObj.id)}>x</button>
+                <button class="delete-button" on:click={() => removeFile(fileObj.id)}>x</button>
                 <span class="file-name">{fileObj.file.name}</span>
             </li>
         {/each}
@@ -84,6 +124,10 @@
     .file-list {
         display: flex;
         flex-direction: column;
+        align-items: center;
+        width: 80%;
+        margin: auto;
+        margin-bottom: 8px;
     }
 
     .file-input {
@@ -94,28 +138,23 @@
         list-style-type: none;
         display: flex;
         align-items: center;
-        width: 100%; /* set width to fill parent */
-        margin: auto;
-        position: relative; /* set relative positioning so that we can position 'remove-file' absolutely */
+        justify-content: center;
     }
 
     .file-name {
-        margin-left: 40px; /* leave space for 'remove-file' button */
-        text-align: left;
+        text-align: center;
     }
 
-    .remove-file {
-        position: absolute; /* set absolute positioning */
-        left: 0; /* align to the left edge of 'file-container' */
+    .delete-button {
         color: red;
         background-color: white;
-        border: 2px solid gray;
-        border-radius: 1rem;
         cursor: pointer;
+        border: none;
     }
 
-    .remove-file:hover {
+    .delete-button:hover {
         background-color: gray;
+        transition: cubic-bezier(0.075, 0.82, 0.165, 1);
     }
 
     .drag-over {

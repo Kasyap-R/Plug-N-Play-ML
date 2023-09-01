@@ -3,53 +3,63 @@
 	import ModelSelector from "./ModelSelector.svelte";
 	import ResultsDisplay from "./ResultsDisplay.svelte";
 	import TrainingInitiator from "./TrainingInitiator.svelte";
+    import TargetSelector from "./TargetSelector.svelte";
 
-    let uploadedData = null;
+    import {ERROR_MESSAGES} from '../utils/error_messages'
+    import { trainModel } from '../utils/api'
+    import {MODEL_NAME_KEY, TARGET_COLUMN_NAME_KEY, FILE_KEY} from '../utils/constants'
+
+    let uploadedFiles = [];
     let selectedModel = null;
     let isTraining = false;
+    let allowedFileExtensions = /(\.xlsx)$/i;
+    let selectedColumn = null;
 
-    function handleFileUpload(event) {
-        uploadedData = event.detail;
+    function handleFileChange(event) {
+        uploadedFiles = event.detail;
     }
 
     function handleModelSelection(event) {
         selectedModel = event.detail;
     }
 
+    function handleColumnSelection(event) {
+        selectedColumn = event.detail;
+    }
+
     function checkIfReadyForTraining() {
-        if (uploadedData === null || selectedModel === null){
+        if (uploadedFiles === null || selectedModel === null || selectedColumn === null){
             return false;
         }
         return true;
     }
 
-    async function handleIntializingTraining(event){
+    async function initializeModelTraining(){
         if (!checkIfReadyForTraining()) {
-            alert("Ensure you have uploaded data and selected a model.");
+            alert(ERROR_MESSAGES.NOT_READY);
             return;
         }
         if (isTraining) {
-            alert("You are already training a model, please wait until training is complete before sending another request.");
+            alert(ERROR_MESSAGES.ALREADY_TRAINING);
             return;
         }
+
         isTraining = true;
 
         const formData = new FormData();
-        uploadedData.forEach(dataItem => {
-            formData.append('file', dataItem.file);  
+        uploadedFiles.forEach(dataItem => {
+            formData.append(FILE_KEY, dataItem.file);  
         });
         
-        formData.append('model', selectedModel)
+        formData.append(MODEL_NAME_KEY, selectedModel)
+        formData.append(TARGET_COLUMN_NAME_KEY, selectedColumn)
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/v1/train_model/tabular/', {
-                method: 'POST',
-                body: formData
-            })
-            const confirmationMessage = await response.json();
-            console.log(confirmationMessage)
+            const response = await trainModel(formData);
+            console.log(response);
+            isTraining = false;
         } catch (e) {
-            console.error("Error when sending files:", error);
+            console.error("Error when sending files:", e);
         }
     }
 
@@ -57,8 +67,11 @@
 </script>
 
 <main>
-	<DataUploader on:filesUploaded={handleFileUpload}/>
+	<DataUploader {allowedFileExtensions} on:filesUploaded={handleFileChange} on:filesRemoved={handleFileChange}/>
+    {#if uploadedFiles.length >= 1}
+        <TargetSelector {uploadedFiles} on:columnSelected={handleColumnSelection}/> 
+    {/if}
 	<ModelSelector on:modelSelected={handleModelSelection}/>
-	<TrainingInitiator on:startTraining={handleIntializingTraining}/>
+	<TrainingInitiator on:startTraining={initializeModelTraining}/>
 	<ResultsDisplay/>
 </main>

@@ -22,5 +22,5 @@ from . import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('train_model/', views.train_model, name='train_model'),
+    path('api/v1/train_model/tabular/', views.train_model, name='train_model'),
 ]

@@ -1,0 +1,6 @@
+
+# Request Body Keys
+# NOTE: KEEP THESE IN SYNC WITH THE KEYS DEFINED IN THE FRONT-END AND BACKEND
+MODEL_NAME_KEY = 'model_type'
+TARGET_COLUMN_NAME_KEY = 'target-column'
+FILE_KEY = 'file'

@@ -44,11 +44,16 @@
 
 
 <main>
-    <button class="target-selector" on:click={chooseTargetVector}>Select Target Vector</button>
+    <div class="button-display-container">
+        <button class="target-selector" on:click={chooseTargetVector}>Select Target Vector</button>
+        {#if selectedColumn}
+            <div class="selected-column-display">Target Vector: {selectedColumn}</div>
+        {/if}
+    </div>
     {#if showcaseColumnSelector}
         <div class="overlay">
             <div class="column-select">
-                <h1>Please Choose a Column as your Target Vector</h1>
+                <h1>Please Choose a Column as Your Target Vector</h1>
                 <div class="columns-container">
                     {#each columns as column}
                         <div 
@@ -64,9 +69,7 @@
             </div>
         </div>
     {/if}
-    {#if selectedColumn}
-        <div class="selected-column-display">Current Target Vector: {selectedColumn}</div>
-    {/if}
+    
 </main>
 
 <style>
@@ -88,6 +91,12 @@
 
     .target-selector:active {
         background-color: #004085;
+    }
+
+    .button-display-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     .selected-column-display {
@@ -121,6 +130,7 @@
     .columns-container {
         display: flex;
         flex-wrap: wrap;
+        justify-content: center;
         gap: 10px;
     }
 
